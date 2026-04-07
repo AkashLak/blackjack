@@ -1,24 +1,35 @@
+'use strict';
+
 // -- Card Rendering --
 
-/**
- * Builds and returns a DOM element representing a single playing card.
- * Face-down cards render as a decorative back. New cards trigger a deal animation
- * @param {{ suit: string, value: string, faceDown: boolean }} card
- * @param {boolean} [isNew=false] - Applies deal-in CSS animation if true
- * @returns {HTMLElement}
- */
 function createCardElement(card, isNew = false) {
   const el = document.createElement('div');
-  el.className = `card ${card.faceDown ? 'face-down' : ''} ${isNew ? 'deal-animation' : ''}`;
+  const hasDealDelay   = card.dealDelay    !== undefined;
+  const willFlip       = !!card.justRevealed;
+  const shouldAnimate  = hasDealDelay || (isNew && !card._rendered);
+
+  el.className = [
+    'card',
+    card.faceDown  ? 'face-down'    : '',
+    shouldAnimate  ? 'deal-animation' : '',
+    willFlip       ? 'flip-reveal'  : '',
+  ].filter(Boolean).join(' ');
+
+  if (hasDealDelay) {
+    el.style.animationDelay = `${card.dealDelay}ms`;
+    delete card.dealDelay;
+  }
+  if (willFlip) delete card.justRevealed;
+  card._rendered = true;
 
   if (card.faceDown) {
     el.innerHTML = `<div class="card-back"><div class="card-back-pattern"></div></div>`;
     return el;
   }
 
-  const color = isRedSuit(card.suit) ? 'red' : 'black';
+  const color  = isRedSuit(card.suit) ? 'red' : 'black';
   const symbol = getSuitSymbol(card.suit);
-  const val = card.value;
+  const val    = card.value;
 
   el.innerHTML = `
     <div class="card-inner ${color}">
@@ -31,64 +42,52 @@ function createCardElement(card, isNew = false) {
         <span class="card-value">${val}</span>
         <span class="card-suit">${symbol}</span>
       </div>
-    </div>
-  `;
+    </div>`;
   return el;
 }
 
-/**
- * Renders a hand of cards into a container element, including optional
- * label, score, result badge, and active-hand highlight.
- * @param {HTMLElement} container
- * @param {object[]} hand
- * @param {string} [label='']
- * @param {number|string|null} [score=null]
- * @param {{ result: string }|null} [result=null]
- * @param {boolean} [isActive=false]
- */
-function renderHand(container, hand, label = '', score = null, result = null, isActive = false) {
+function renderHand(container, cards, label = '', score = null, result = null, isActive = false) {
   container.innerHTML = '';
 
   if (label) {
     const labelEl = document.createElement('div');
-    labelEl.className = 'hand-label';
+    labelEl.className   = 'hand-label';
     labelEl.textContent = label;
     container.appendChild(labelEl);
   }
 
   const cardsRow = document.createElement('div');
-  cardsRow.className = `cards-row ${isActive ? 'active-hand' : ''}`;
+  cardsRow.className = `cards-row${isActive ? ' active-hand' : ''}`;
 
-  hand.forEach((card, i) => {
-    const cardEl = createCardElement(card, i === hand.length - 1);
-    cardsRow.appendChild(cardEl);
+  cards.forEach((card, i) => {
+    //isNew = last card AND not yet rendered AND no pre-set deal delay
+    const isNew  = i === cards.length - 1 && !card._rendered && card.dealDelay === undefined;
+    cardsRow.appendChild(createCardElement(card, isNew));
   });
-
   container.appendChild(cardsRow);
 
   if (score !== null) {
-    const scoreEl = document.createElement('div');
-    scoreEl.className = 'hand-score';
-    scoreEl.textContent = `Score: ${score}`;
-    container.appendChild(scoreEl);
+    const el = document.createElement('div');
+    el.className   = 'hand-score';
+    el.textContent = score;
+    container.appendChild(el);
   }
 
   if (result) {
-    const resultEl = document.createElement('div');
-    resultEl.className = `hand-result result-${result.result}`;
-    const labels = {
-      win: '✓ WIN',
-      lose: '✗ LOSE',
-      push: '~ PUSH',
-      bust: '✗ BUST',
-      blackjack: '★ BLACKJACK!'
-    };
-    resultEl.textContent = labels[result.result] || result.result.toUpperCase();
-    container.appendChild(resultEl);
+    const el = document.createElement('div');
+    el.className   = `hand-result result-${result.result}`;
+    el.textContent = {
+      win:       '✓ WIN',
+      lose:      '✗ LOSE',
+      push:      '~ PUSH',
+      bust:      '✗ BUST',
+      blackjack: '★ BLACKJACK',
+    }[result.result] || result.result.toUpperCase();
+    container.appendChild(el);
   }
 }
 
-// -- Main UI Update --
+// -- Main Update --
 
 function updateUI() {
   updateChipsDisplay();
@@ -97,6 +96,9 @@ function updateUI() {
   updatePlayerArea();
   updateButtons();
   updateMessage();
+  updateHintDisplay();
+  updateStatsDisplay();
+  updateBetStack();
 }
 
 function updateChipsDisplay() {
@@ -104,9 +106,12 @@ function updateChipsDisplay() {
 }
 
 function updateBetDisplay() {
-  document.getElementById('bet-amount').textContent = `$${state.currentBet.toLocaleString()}`;
-  if (state.gameState === GameState.PLAYER_TURN || state.gameState === GameState.DEALER_TURN || state.gameState === GameState.ROUND_OVER) {
-    document.getElementById('bet-amount').textContent = `$${state.betThisRound.toLocaleString()}`;
+  const el = document.getElementById('bet-amount');
+  if (state.gameState === GameState.BETTING || state.gameState === GameState.IDLE) {
+    el.textContent = `$${state.currentBet.toLocaleString()}`;
+  } else {
+    const total = state.playerHands.reduce((s, h) => s + h.bet, 0);
+    el.textContent = `$${total.toLocaleString()}`;
   }
 }
 
@@ -116,12 +121,9 @@ function updateDealerArea() {
     container.innerHTML = '<div class="empty-hand">Dealer</div>';
     return;
   }
-  const score = state.gameState === GameState.PLAYER_TURN
-    ? getHandScore([state.dealerHand[0]])
-    : getHandScore(state.dealerHand);
-  const scoreLabel = state.gameState === GameState.PLAYER_TURN && state.dealerHand.some(c => c.faceDown)
-    ? `${score}+?`
-    : score;
+  const showFull   = state.gameState !== GameState.PLAYER_TURN;
+  const score      = showFull ? getHandScore(state.dealerHand) : getHandScore([state.dealerHand[0]]);
+  const scoreLabel = !showFull && state.dealerHand.some(c => c.faceDown) ? `${score} + ?` : score;
   renderHand(container, state.dealerHand, '', scoreLabel);
 }
 
@@ -135,40 +137,36 @@ function updatePlayerArea() {
   }
 
   state.playerHands.forEach((hand, i) => {
-    const handContainer = document.createElement('div');
-    handContainer.className = 'player-hand-container';
-    const score = getHandScore(hand);
+    const div      = document.createElement('div');
     const isActive = i === state.activeHandIndex && state.gameState === GameState.PLAYER_TURN;
-    const label = state.playerHands.length > 1 ? `Hand ${i + 1}` : '';
-    const result = state.handResults[i] || null;
-    renderHand(handContainer, hand, label, score, result, isActive);
-    container.appendChild(handContainer);
+    div.className  = 'player-hand-container';
+
+    if (hand.result === 'win' || hand.result === 'blackjack') div.classList.add('hand-win');
+    if (hand.result === 'lose' || hand.result === 'bust')     div.classList.add('hand-lose');
+
+    const label  = state.playerHands.length > 1 ? `Hand ${i + 1}  ·  $${hand.bet.toLocaleString()}` : '';
+    const score  = getHandScore(hand.cards);
+    const result = hand.result ? { result: hand.result } : null;
+    renderHand(div, hand.cards, label, score, result, isActive);
+    container.appendChild(div);
   });
 }
 
-/**
- * Shows or hides action/bet buttons based on the current game state.
- * Also disables Double and Split when the player doesn't meet the conditions
- */
 function updateButtons() {
-  const gs = state.gameState;
+  const gs         = state.gameState;
+  const insVisible = document.getElementById('insurance-controls').style.display !== 'none';
 
-  setVisible('bet-controls', gs === GameState.BETTING || gs === GameState.IDLE);
-  setVisible('deal-btn', gs === GameState.BETTING);
-  setVisible('new-round-btn', gs === GameState.ROUND_OVER);
-  setVisible('action-buttons', gs === GameState.PLAYER_TURN);
+  setVisible('bet-controls',   gs === GameState.BETTING || gs === GameState.IDLE);
+  setVisible('deal-btn',       gs === GameState.BETTING);
+  setVisible('new-round-btn',  gs === GameState.ROUND_OVER);
+  setVisible('action-buttons', gs === GameState.PLAYER_TURN && !insVisible);
 
-  if (gs === GameState.PLAYER_TURN) {
+  if (gs === GameState.PLAYER_TURN && !insVisible) {
     document.getElementById('btn-double').disabled = !canDoubleDown();
-    document.getElementById('btn-split').disabled = !canSplitHand();
+    document.getElementById('btn-split').disabled  = !canSplitHand();
   }
 }
 
-/**
- * Toggles visibility of a DOM element by id using display:flex / none
- * @param {string} id
- * @param {boolean} visible
- */
 function setVisible(id, visible) {
   const el = document.getElementById(id);
   if (el) el.style.display = visible ? 'flex' : 'none';
@@ -176,55 +174,130 @@ function setVisible(id, visible) {
 
 function updateMessage() {
   const el = document.getElementById('message-area');
-  if (state.message) {
-    el.textContent = state.message;
-    el.style.opacity = '1';
-  } else {
-    el.style.opacity = '0';
-  }
+  el.textContent   = state.message || '';
+  el.style.opacity = state.message ? '1' : '0';
 }
 
 function showInsuranceUI(show) {
   setVisible('insurance-controls', show);
-  setVisible('action-buttons', !show);
+  if (show) {
+    setVisible('action-buttons', false);
+  } else if (state.gameState === GameState.PLAYER_TURN) {
+    setVisible('action-buttons', true);
+  }
 }
 
-/**
- * Determines the overall round outcome across all hands and displays a summary message.
- * Handles mixed results (Ex: one hand won, one lost) from splits
- */
 function showRoundResult() {
-  const results = state.handResults;
-  if (results.length === 0) return;
+  const hands = state.playerHands;
+  if (!hands.length) return;
 
-  const hasBlackjack = results.some(r => r.result === 'blackjack');
-  const allWin = results.every(r => r.result === 'win' || r.result === 'blackjack');
-  const allLose = results.every(r => r.result === 'lose' || r.result === 'bust');
-  const allPush = results.every(r => r.result === 'push');
-
-  let msg = '';
-  if (hasBlackjack) msg = '★ BLACKJACK! 3:2 Payout!';
-  else if (allWin) msg = '🎉 You Win!';
-  else if (allLose) msg = '💸 Dealer Wins';
-  else if (allPush) msg = '🤝 Push — Bet Returned';
-  else msg = 'Round Over';
-
+  let msg;
+  if (hands.length === 1) {
+    const h      = hands[0];
+    const profit = h.winAmount - h.bet;
+    msg = ({
+      blackjack: `★ Blackjack! Paid 3:2  (+$${profit.toLocaleString()})`,
+      win:       `You win $${profit.toLocaleString()}!`,
+      lose:      `Dealer wins — you lost $${h.bet.toLocaleString()}.`,
+      bust:      `Bust! You lost $${h.bet.toLocaleString()}.`,
+      push:      `Push — bet returned.`,
+    })[h.result] || 'Round over.';
+  } else {
+    const labels = { win: 'wins', lose: 'loses', bust: 'busts', push: 'pushes', blackjack: 'Blackjack!' };
+    msg = hands.map((h, i) => `Hand ${i + 1} ${labels[h.result] || h.result}`).join('  ·  ');
+  }
   setMessage(msg);
   updateMessage();
+
+  //Table ambient glow by outcome
+  const felt = document.querySelector('.table-felt');
+  felt.classList.remove('glow-win', 'glow-blackjack', 'glow-lose');
+  if      (hands.some(h => h.result === 'blackjack'))                    felt.classList.add('glow-blackjack');
+  else if (hands.some(h => h.result === 'win'))                          felt.classList.add('glow-win');
+  else if (hands.every(h => h.result === 'lose' || h.result === 'bust')) felt.classList.add('glow-lose');
+  setTimeout(() => felt.classList.remove('glow-win', 'glow-blackjack', 'glow-lose'), 2200);
 }
 
 // -- Chip Buttons --
 
 function buildChipButtons() {
-  const chips = [5, 10, 25, 50, 100, 500];
+  const denominations = [5, 10, 25, 50, 100, 500];
+  const colors = {
+    5: '#b71c1c', 10: '#1a237e', 25: '#1b5e20',
+    50: '#4a148c', 100: '#e65100', 500: '#880e4f',
+  };
   const container = document.getElementById('chip-buttons');
   container.innerHTML = '';
-  chips.forEach(val => {
+  denominations.forEach(val => {
     const btn = document.createElement('button');
     btn.className = 'chip-btn';
-    btn.textContent = `$${val}`;
+    btn.style.setProperty('--chip-color', colors[val]);
+    btn.innerHTML = `<span>$${val}</span>`;
     btn.dataset.value = val;
     btn.addEventListener('click', () => placeBet(val));
     container.appendChild(btn);
   });
+}
+
+// -- Bet Stack --
+
+function updateBetStack() {
+  const container = document.getElementById('bet-stack');
+  if (!container) return;
+  container.innerHTML = '';
+  if (state.currentBet <= 0) return;
+
+  //Show 1–3 stacked chip layers based on bet magnitude
+  const layers = state.currentBet >= 200 ? 3 : state.currentBet >= 50 ? 2 : 1;
+  for (let i = 0; i < layers; i++) {
+    const chip = document.createElement('div');
+    chip.className = 'bet-chip-visual';
+    chip.style.bottom  = `${i * 7}px`;
+    chip.style.zIndex  = i + 1;
+    chip.style.opacity = i < layers - 1 ? '0.65' : '1';
+    if (i === layers - 1) chip.textContent = `$${state.currentBet.toLocaleString()}`;
+    container.appendChild(chip);
+  }
+}
+
+function animateBetPulse() {
+  const el = document.getElementById('bet-amount');
+  if (!el) return;
+  el.classList.remove('bet-pulse');
+  void el.offsetWidth; //force reflow to restart animation
+  el.classList.add('bet-pulse');
+}
+
+// -- Hint Display --
+
+function updateHintDisplay() {
+  const el = document.getElementById('hint-display');
+  if (!el) return;
+  const hint = getCurrentHint();
+  if (hint) {
+    el.textContent = `Strategy: ${hint}`;
+    el.className   = `hint-display hint-${hint.toLowerCase()} visible`;
+  } else {
+    el.className   = 'hint-display';
+    el.textContent = '';
+  }
+}
+
+// -- Stats Display --
+
+function updateStatsDisplay() {
+  const panel = document.getElementById('stats-panel');
+  if (!panel || !panel.classList.contains('visible')) return;
+
+  const winRate  = stats.handsPlayed > 0 ? Math.round((stats.wins / stats.handsPlayed) * 100) : 0;
+  const sign     = stats.currentStreak > 0 ? '+' : '';
+
+  document.getElementById('stat-hands').textContent   = stats.handsPlayed;
+  document.getElementById('stat-wins').textContent    = stats.wins;
+  document.getElementById('stat-bj').textContent      = stats.blackjacks;
+  document.getElementById('stat-winrate').textContent = stats.handsPlayed > 0 ? `${winRate}%` : '—';
+
+  const streakEl    = document.getElementById('stat-streak');
+  streakEl.textContent = `${sign}${stats.currentStreak}`;
+  streakEl.className   = `stat-value${stats.currentStreak > 0 ? ' positive' : stats.currentStreak < 0 ? ' negative' : ''}`;
 }
