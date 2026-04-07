@@ -13,11 +13,57 @@
 
   <div class="table-felt">
 
+    <!-- Intro Screen -->
+    <div id="intro-screen" class="intro-screen">
+      <div class="intro-content">
+        <h1 class="intro-title">Blackjack</h1>
+        <p class="intro-tagline">6-Deck Shoe · Dealer Hits Soft 17 · Blackjack Pays 3:2</p>
+        <div class="intro-divider">♠ ♥ ♣ ♦</div>
+        <div class="intro-buttons">
+          <button id="start-game-btn" class="btn btn-deal btn-intro">Start Game</button>
+          <button id="exit-game-btn"  class="btn btn-ghost btn-intro">Exit</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Header -->
     <header class="game-header">
-      <h1 class="game-title">Blackjack</h1>
-      <p class="game-subtitle">6-Deck Shoe · Dealer Hits Soft 17 · Blackjack Pays 3:2</p>
+      <div class="header-center">
+        <h1 class="game-title">Blackjack</h1>
+        <p class="game-subtitle">6-Deck Shoe · Dealer Hits Soft 17 · Blackjack Pays 3:2</p>
+      </div>
+      <div class="header-controls">
+        <button id="hint-toggle"      class="btn btn-ghost btn-sm">Hints: OFF</button>
+        <button id="stats-toggle"     class="btn btn-ghost btn-sm">◎ Stats</button>
+        <button id="in-game-exit-btn" class="btn btn-ghost btn-sm">✕ Exit</button>
+      </div>
     </header>
+
+    <!-- Stats Panel (collapsible) -->
+    <div id="stats-panel" class="stats-panel">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="stat-label">Hands</span>
+          <span class="stat-value" id="stat-hands">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Wins</span>
+          <span class="stat-value" id="stat-wins">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Blackjacks</span>
+          <span class="stat-value" id="stat-bj">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Win %</span>
+          <span class="stat-value" id="stat-winrate">—</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Streak</span>
+          <span class="stat-value" id="stat-streak">0</span>
+        </div>
+      </div>
+    </div>
 
     <!-- HUD -->
     <div class="hud">
@@ -34,6 +80,9 @@
     <!-- Message Area -->
     <div id="message-area" class="message-area"></div>
 
+    <!-- Basic Strategy Hint -->
+    <div id="hint-display" class="hint-display"></div>
+
     <!-- Dealer Section -->
     <section class="dealer-section">
       <div class="section-label">Dealer</div>
@@ -41,9 +90,7 @@
     </section>
 
     <!-- Divider -->
-    <div class="table-divider">
-      <span>♠ ♥ ♣ ♦</span>
-    </div>
+    <div class="table-divider"><span>♠ ♥ ♣ ♦</span></div>
 
     <!-- Player Section -->
     <section class="player-section">
@@ -53,39 +100,40 @@
 
     <!-- Insurance Controls -->
     <div id="insurance-controls" class="insurance-controls" style="display:none;">
-      <p class="insurance-text">Dealer shows Ace — Take Insurance? (Costs half your bet)</p>
+      <p class="insurance-text">Dealer shows Ace — Take Insurance? (costs half your bet)</p>
       <div class="insurance-buttons">
         <button id="btn-insurance-yes" class="btn btn-yes">Take Insurance</button>
-        <button id="btn-insurance-no" class="btn btn-no">Decline</button>
+        <button id="btn-insurance-no"  class="btn btn-no">Decline</button>
       </div>
     </div>
 
-    <!-- Action Buttons (during play) -->
+    <!-- Action Buttons (during player turn) -->
     <div id="action-buttons" class="action-buttons" style="display:none;">
-      <button id="btn-hit" class="btn btn-primary">Hit <kbd>H</kbd></button>
-      <button id="btn-stand" class="btn btn-secondary">Stand <kbd>S</kbd></button>
+      <button id="btn-hit"    class="btn btn-primary">Hit <kbd>H</kbd></button>
+      <button id="btn-stand"  class="btn btn-secondary">Stand <kbd>S</kbd></button>
       <button id="btn-double" class="btn btn-accent">Double <kbd>D</kbd></button>
-      <button id="btn-split" class="btn btn-accent">Split <kbd>P</kbd></button>
+      <button id="btn-split"  class="btn btn-accent">Split <kbd>P</kbd></button>
     </div>
 
     <!-- Betting Controls -->
     <div id="bet-controls" class="bet-controls">
+      <div id="bet-stack" class="bet-stack"></div>
       <div id="chip-buttons" class="chip-buttons"></div>
       <div class="bet-actions">
-        <button id="clear-bet-btn" class="btn btn-ghost">Clear Bet</button>
-        <button id="allin-btn" class="btn btn-ghost">All In</button>
-        <button id="deal-btn" class="btn btn-deal">Deal ↵</button>
+        <button id="clear-bet-btn" class="btn btn-ghost">Clear</button>
+        <button id="allin-btn"     class="btn btn-ghost">All In</button>
+        <button id="deal-btn"      class="btn btn-deal">Deal ↵</button>
       </div>
     </div>
 
     <!-- New Round Button -->
     <div id="new-round-btn" class="new-round-wrap" style="display:none;">
-      <button class="btn btn-deal" onclick="newRound()">New Round ↵</button>
+      <button id="new-round-action-btn" class="btn btn-deal">New Round ↵</button>
     </div>
 
   </div>
 
-  <!-- Scripts (order matters!) -->
+  <!-- Scripts — load order matters -->
   <script src="js/deck.js"></script>
   <script src="js/game.js"></script>
   <script src="js/ui.js"></script>
