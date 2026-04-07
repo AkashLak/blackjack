@@ -1,0 +1,567 @@
+/* -- Variables -- */
+:root {
+  --felt: #1a5c38;
+  --felt-light: #1f6b42;
+  --felt-dark: #123d26;
+  --gold: #c9a84c;
+  --gold-light: #e8c96a;
+  --gold-dark: #9a7830;
+  --card-white: #fafaf8;
+  --card-shadow: rgba(0,0,0,0.45);
+  --red: #c0392b;
+  --black: #1a1a1a;
+  --text-light: #f0e6cc;
+  --text-muted: #a89060;
+  --chip-green: #27ae60;
+  --radius: 12px;
+  --card-w: 80px;
+  --card-h: 112px;
+}
+
+/* -- Reset & Base -- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Crimson Pro', Georgia, serif;
+  background: #0d2b1a;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px 10px 40px;
+}
+
+/* -- Table -- */
+.table-felt {
+  background: radial-gradient(ellipse at 50% 30%, var(--felt-light) 0%, var(--felt) 50%, var(--felt-dark) 100%);
+  border: 6px solid var(--gold-dark);
+  border-radius: 40px;
+  box-shadow:
+    0 0 0 2px #8a6020,
+    0 0 60px rgba(0,0,0,0.7),
+    inset 0 0 80px rgba(0,0,0,0.25);
+  width: 100%;
+  max-width: 820px;
+  min-height: 92vh;
+  padding: 28px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Felt texture overlay */
+.table-felt::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 2px,
+      rgba(255,255,255,0.015) 2px,
+      rgba(255,255,255,0.015) 4px
+    );
+  pointer-events: none;
+  border-radius: 34px;
+}
+
+/* -- Header -- */
+.game-header {
+  text-align: center;
+}
+
+.game-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 6vw, 3.2rem);
+  font-weight: 900;
+  color: var(--gold);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 0 30px rgba(201,168,76,0.3);
+  letter-spacing: 6px;
+  text-transform: uppercase;
+}
+
+.game-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* -- HUD -- */
+.hud {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+}
+
+.hud-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: var(--radius);
+  padding: 8px 24px;
+  min-width: 120px;
+}
+
+.hud-label {
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.hud-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  color: var(--gold-light);
+  font-weight: 700;
+}
+
+/* -- Message -- */
+.message-area {
+  text-align: center;
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1rem, 3vw, 1.4rem);
+  color: var(--gold-light);
+  min-height: 2rem;
+  transition: opacity 0.3s;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  letter-spacing: 1px;
+}
+
+/* -- Section Labels -- */
+.section-label {
+  font-size: 0.7rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.dealer-section, .player-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* -- Divider -- */
+.table-divider {
+  text-align: center;
+  color: var(--gold-dark);
+  font-size: 1.1rem;
+  letter-spacing: 10px;
+  border-top: 1px solid rgba(201,168,76,0.2);
+  border-bottom: 1px solid rgba(201,168,76,0.2);
+  padding: 6px 0;
+}
+
+/* -- Hand Area -- */
+.hand-area {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  min-height: 140px;
+  align-items: flex-end;
+}
+
+.multi-hand {
+  gap: 24px;
+}
+
+.empty-hand {
+  color: rgba(255,255,255,0.1);
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  align-self: center;
+}
+
+.player-hand-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.hand-label {
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.cards-row {
+  display: flex;
+  gap: -12px;
+  position: relative;
+}
+
+.cards-row.active-hand {
+  filter: drop-shadow(0 0 12px rgba(201,168,76,0.6));
+}
+
+.cards-row .card {
+  margin-left: -14px;
+}
+
+.cards-row .card:first-child {
+  margin-left: 0;
+}
+
+.hand-score {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  letter-spacing: 1px;
+}
+
+.hand-result {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 3px 12px;
+  border-radius: 4px;
+}
+
+.result-win     { color: #2ecc71; border: 1px solid #2ecc71; }
+.result-blackjack { color: var(--gold); border: 1px solid var(--gold); }
+.result-lose    { color: #e74c3c; border: 1px solid #e74c3c; }
+.result-bust    { color: #e74c3c; border: 1px solid #e74c3c; }
+.result-push    { color: #95a5a6; border: 1px solid #7f8c8d; }
+
+/* -- Cards -- */
+.card {
+  width: var(--card-w);
+  height: var(--card-h);
+  border-radius: 8px;
+  box-shadow: 2px 4px 12px var(--card-shadow);
+  position: relative;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  z-index: 10;
+}
+
+.card-inner {
+  width: 100%;
+  height: 100%;
+  background: var(--card-white);
+  border-radius: 8px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid #ddd;
+  position: relative;
+}
+
+.card-inner.red { color: var(--red); }
+.card-inner.black { color: var(--black); }
+
+.card-corner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.card-corner.bottom-right {
+  align-self: flex-end;
+  transform: rotate(180deg);
+}
+
+.card-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.card-suit {
+  font-size: 0.75rem;
+}
+
+.card-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  opacity: 0.15;
+}
+
+/* Face-down card */
+.card.face-down .card-back {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a3a6b, #0d2040);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #2a4a8b;
+}
+
+.card-back-pattern {
+  width: calc(100% - 12px);
+  height: calc(100% - 12px);
+  border: 2px solid rgba(255,255,255,0.12);
+  border-radius: 4px;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255,255,255,0.04) 0px,
+      rgba(255,255,255,0.04) 2px,
+      transparent 2px,
+      transparent 8px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255,255,255,0.04) 0px,
+      rgba(255,255,255,0.04) 2px,
+      transparent 2px,
+      transparent 8px
+    );
+}
+
+/* Deal animation */
+@keyframes dealIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) rotate(-5deg) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(0) scale(1);
+  }
+}
+
+.deal-animation {
+  animation: dealIn 0.35s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+}
+
+/* -- Chip Buttons -- */
+.bet-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.chip-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.chip-btn {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 3px solid var(--gold-dark);
+  background: radial-gradient(circle at 35% 35%, #2ecc71, #27ae60, #1e8449);
+  color: white;
+  font-family: 'Playfair Display', serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+  transition: transform 0.1s, box-shadow 0.1s;
+  position: relative;
+}
+
+.chip-btn::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255,255,255,0.25);
+}
+
+.chip-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.chip-btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.bet-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* -- Buttons -- */
+.btn {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 10px 22px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-transform: uppercase;
+}
+
+.btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #27ae60, #1e8449);
+  color: white;
+  box-shadow: 0 4px 12px rgba(39,174,96,0.4);
+  border: 1px solid #1a7a3e;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(39,174,96,0.5);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #c0392b, #96281b);
+  color: white;
+  box-shadow: 0 4px 12px rgba(192,57,43,0.4);
+  border: 1px solid #7b2118;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  transform: translateY(-1px);
+}
+
+.btn-accent {
+  background: linear-gradient(135deg, #2980b9, #1a6393);
+  color: white;
+  box-shadow: 0 4px 12px rgba(41,128,185,0.4);
+  border: 1px solid #155273;
+}
+
+.btn-accent:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid rgba(201,168,76,0.25);
+}
+
+.btn-ghost:hover {
+  color: var(--gold-light);
+  border-color: var(--gold);
+  background: rgba(201,168,76,0.08);
+}
+
+.btn-deal {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: #1a1a1a;
+  font-weight: 700;
+  font-size: 1.05rem;
+  box-shadow: 0 4px 16px rgba(201,168,76,0.4);
+  border: 1px solid var(--gold-dark);
+  padding: 12px 30px;
+}
+
+.btn-deal:hover {
+  background: linear-gradient(135deg, var(--gold-light), var(--gold));
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(201,168,76,0.5);
+}
+
+.btn-yes {
+  background: linear-gradient(135deg, #27ae60, #1e8449);
+  color: white;
+  border: 1px solid #1a7a3e;
+}
+
+.btn-no {
+  background: linear-gradient(135deg, #c0392b, #96281b);
+  color: white;
+  border: 1px solid #7b2118;
+}
+
+kbd {
+  font-size: 0.65rem;
+  background: rgba(0,0,0,0.25);
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin-left: 4px;
+  vertical-align: middle;
+  font-family: monospace;
+}
+
+/* -- Action Buttons -- */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* -- Insurance -- */
+.insurance-controls {
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--gold-dark);
+  border-radius: var(--radius);
+  padding: 16px 24px;
+}
+
+.insurance-text {
+  color: var(--text-light);
+  text-align: center;
+  font-size: 1rem;
+}
+
+.insurance-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+/* -- New Round -- */
+.new-round-wrap {
+  justify-content: center;
+}
+
+/* -- Responsive -- */
+@media (max-width: 560px) {
+  :root {
+    --card-w: 62px;
+    --card-h: 88px;
+  }
+
+  .table-felt {
+    padding: 20px 16px 24px;
+    border-radius: 24px;
+    gap: 12px;
+  }
+
+  .hud { gap: 16px; }
+  .chip-btn { width: 50px; height: 50px; font-size: 0.7rem; }
+  .btn { padding: 9px 16px; font-size: 0.9rem; }
+  .card-value { font-size: 0.85rem; }
+  .card-center { font-size: 1.6rem; }
+}
