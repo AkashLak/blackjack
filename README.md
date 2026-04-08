@@ -37,11 +37,11 @@ Then visit `http://localhost:8000`.
 
 ## ✨ Features
 
-- 💡 **Hints** — toggle basic strategy hints during your turn
-- 📊 **Stats panel** — tracks hands, wins, blackjacks, win %, and current streak
-- 💾 **Chip persistence** — chip count and stats saved to `localStorage`
-- 🎬 **Animated dealing** — staggered card deal and animated dealer draw
-- 💰 **All-in button** — bet your entire stack at once
+- 💡 **Hints** - toggle basic strategy hints during your turn
+- 📊 **Stats panel** - tracks hands, wins, blackjacks, win %, and current streak
+- 💾 **Chip persistence** - chip count and stats saved to `localStorage`
+- 🎬 **Animated dealing** - staggered card deal and animated dealer draw
+- 💰 **All-in button** - bet your entire stack at once
 
 ## 🗂️ Project Structure
 
