@@ -1,8 +1,8 @@
-# Blackjack
+# 🃏 Blackjack
 
 A browser-based Blackjack game built with HTML, CSS, and JavaScript. No dependencies, no build step.
 
-## Running
+## 🚀 Running
 
 ```
 open index.html
@@ -16,16 +16,16 @@ python3 -m http.server
 
 Then visit `http://localhost:8000`.
 
-## Rules
+## 📋 Rules
 
-- 6-deck shoe (auto-reshuffles when fewer than 52 cards remain)
-- Dealer hits soft 17
-- Blackjack pays 3:2
-- Insurance at half the bet, pays 2:1
-- Double down on first two cards only
-- Split up to 4 hands; split Aces receive one card each
+- 🎴 6-deck shoe (auto-reshuffles when fewer than 52 cards remain)
+- 🏠 Dealer hits soft 17
+- ♠️ Blackjack pays 3:2
+- 🛡️ Insurance at half the bet, pays 2:1
+- 2️⃣ Double down on first two cards only
+- ✂️ Split up to 4 hands; split Aces receive one card each
 
-## Controls
+## ⌨️ Controls
 
 | Action      | Button | Key     |
 |-------------|--------|---------|
@@ -35,15 +35,15 @@ Then visit `http://localhost:8000`.
 | Split       | Split  | `P`     |
 | Deal / Next | Deal   | `Enter` |
 
-## Features
+## ✨ Features
 
-- **Hints** — toggle basic strategy hints during your turn
-- **Stats panel** — tracks hands, wins, blackjacks, win %, and current streak
-- **Chip persistence** — chip count and stats saved to `localStorage`
-- **Animated dealing** — staggered card deal and animated dealer draw
-- **All-in button** — bet your entire stack at once
+- 💡 **Hints** — toggle basic strategy hints during your turn
+- 📊 **Stats panel** — tracks hands, wins, blackjacks, win %, and current streak
+- 💾 **Chip persistence** — chip count and stats saved to `localStorage`
+- 🎬 **Animated dealing** — staggered card deal and animated dealer draw
+- 💰 **All-in button** — bet your entire stack at once
 
-## Project Structure
+## 🗂️ Project Structure
 
 ```
 blackjack/
